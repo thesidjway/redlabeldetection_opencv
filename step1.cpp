@@ -65,28 +65,38 @@ vector<vector<Point> > newcontoursvector;
 Point prev;
 prev.x = 0;
 prev.y = 0;
-vector<Point > newcontours;
+vector<Point > newcontours,draw,anothervar;
+
 for (auto iter : contours)
    {
-    vector<Point > newcontours;
+    
     for (auto v : iter)
       {
-        //
+        anothervar.push_back(v);
         if (v.x==prev.x || v.y==prev.y)
         {
-           cout<<"Duplicate"<<endl;
+           //cout<<"Duplicate"<<endl;
         }
         else
         {
           newcontours.push_back(v);
-          cout << v << endl;
+          //cout << v << endl;
         }
         prev=v;
     }
-    cout<<"COUNTOUR COMPLETE"<<endl;
+   // cout<<"COUNTOUR COMPLETE"<<endl;
+    break;
     //newcontoursvector.push_back(newcontours);
   }
-
+Mat newdst=dst;
+approxPolyDP(anothervar, draw, 2, 1);
+for (auto iterator : draw)
+{
+  Vec3b mycolor(0,0,100);
+  cout<<iterator<<endl;
+  //dst.at<Vec3b>(iterator.x,iterator.y)=mycolor;
+  circle(newdst,iterator,20,CV_RGB(255,255,255),-1,8,0);
+}
 
 
   for( int i = 0; i< contours.size(); i++ )
@@ -98,8 +108,9 @@ for (auto iter : contours)
 
 
 
- imshow("detected lines", cdst);
- imshow("canny", dst);
+ //imshow("detected lines", cdst);
+ imshow("corners",newdst);
+ //imshow("canny", dst);
  imshow("contours",drawing);
  //imshow("contours",contours);
 
