@@ -35,6 +35,7 @@ int main(int argc, char** argv)
 {
 const char* filename = argc >= 2 ? argv[1] : "pic1.jpg";
 Mat src = imread(filename, 0);
+Mat newcom=imread("testimage3.png",0);
 Mat srcclr = imread(filename, CV_LOAD_IMAGE_COLOR);
 
  if(src.empty())
@@ -43,9 +44,13 @@ Mat srcclr = imread(filename, CV_LOAD_IMAGE_COLOR);
      return -1;
  }
 
- Mat dst, cdst,srchsv,srcred,img_final;
- //cvtColor(srcclr, srchsv, CV_BGR2HSV);
- srcred=redDetect(srcclr);
+ Mat dst, cdst,srchsv,srcred,srcred1,srcred2,img_final;
+ cvtColor(srcclr, srchsv, CV_BGR2HSV);
+ //srcred=redDetect(srcclr);
+ inRange(srchsv,Scalar(0,90,40),Scalar(20,255,255),srcred1);
+ inRange(srchsv,Scalar(160,90,40),Scalar(180,255,255),srcred2);
+ bitwise_or(srcred1,srcred2,srcred);
+ imshow("srcred",srcred);
  vector<vector<Point> > contours;
  vector<Vec4i> hierarchy;
  Canny(srcred, dst, 50, 200, 3);
@@ -140,6 +145,7 @@ warpPerspective(src,pers,lambda,src.size() );
 
 
 Mat croppedImage = pers(myROI);
+matchShapes(croppedImage, newcom, CV_CONTOURS_MATCH_I1, 0);
  //imshow("detected lines", cdst);
  //imshow("corners",newdst);
  //imshow("canny", dst);
