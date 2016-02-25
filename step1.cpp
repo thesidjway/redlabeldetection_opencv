@@ -50,7 +50,7 @@ Mat srcclr = imread(filename, CV_LOAD_IMAGE_COLOR);
  vector<Vec4i> hierarchy;
  Canny(srcred, dst, 50, 200, 3);
  cvtColor(dst, cdst, CV_GRAY2BGR);
- findContours( dst, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+ findContours( srcred, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
  vector<Vec4i> lines;
   HoughLinesP(dst, lines, 1, CV_PI/180, 50, 50, 10 );
   for( size_t i = 0; i < lines.size(); i++ )
@@ -65,18 +65,25 @@ vector<vector<Point> > newcontoursvector;
 Point prev;
 prev.x = 0;
 prev.y = 0;
-vector<Point > newcontours,draw,anothervar;
+vector<Point > newcontours,draw,anothervar,largestContour;
 Point2f outputQuad[4],inputQuad[4];
-
+int maxlength=0;
 for (auto iter : contours)
    {
-    
-    for (auto v : iter)
+    if(contourArea(iter)>maxlength)
+    {
+      maxlength=contourArea(iter);
+      largestContour=iter;
+    }
+  }
+
+
+    for (auto v : largestContour)
       {
         anothervar.push_back(v);
         if (v.x==prev.x || v.y==prev.y)
         {
-           //cout<<"Duplicate"<<endl;
+           //cout<<"Duplicate"<<endl;s
         }
         else
         {
@@ -87,11 +94,9 @@ for (auto iter : contours)
         prev=v;
     }
    // cout<<"COUNTOUR COMPLETE"<<endl;
-    break;
-    //newcontoursvector.push_back(newcontours);
-  }
+
 Mat newdst=dst;
-approxPolyDP(anothervar, draw, 2, 1);
+approxPolyDP(newcontours, draw, arcLength(newcontours,1)*0.02, 1);
 int minx=32767,miny=32767,maxx=0,maxy=0,it=0;
 for (auto iterator : draw)
 {
@@ -119,11 +124,15 @@ Rect myROI(minx,miny,maxx-minx,maxy-miny);
 
 Mat pers;
 
-  for( int i = 0; i< contours.size(); i++ )
+  /*for( int i = 0; i< contours.size(); i++ )
      {
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
-     }
+     }*/
+for (auto contourpt : largestContour){
+    Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+    circle(drawing, contourpt, 2, color, 1, 8, 0);
+}
 Mat lambda( 2, 4, CV_32FC1 );
 lambda = Mat::zeros( src.rows, src.cols, src.type() );
 lambda = getPerspectiveTransform(inputQuad, outputQuad);
@@ -134,9 +143,9 @@ Mat croppedImage = pers(myROI);
  //imshow("detected lines", cdst);
  //imshow("corners",newdst);
  //imshow("canny", dst);
-// imshow("contours",drawing);
+imshow("contours",drawing);
  imshow("Original",src);
- imshow("Cropped and Rotated",croppedImage);
+imshow("Cropped and Rotated",croppedImage);
  //imshow("contours",contours);
 
 
