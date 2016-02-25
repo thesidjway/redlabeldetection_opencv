@@ -65,7 +65,7 @@ vector<vector<Point> > newcontoursvector;
 Point prev;
 prev.x = 0;
 prev.y = 0;
-vector<Point > newcontours,draw,anothervar;
+vector<Point > newcontours,draw,anothervar,outputQuad,inputQuad;
 
 for (auto iter : contours)
    {
@@ -81,6 +81,7 @@ for (auto iter : contours)
         {
           newcontours.push_back(v);
           //cout << v << endl;
+
         }
         prev=v;
     }
@@ -90,21 +91,37 @@ for (auto iter : contours)
   }
 Mat newdst=dst;
 approxPolyDP(anothervar, draw, 2, 1);
+int minx=32767,miny=32767,maxx=0,maxy=0;
 for (auto iterator : draw)
 {
   Vec3b mycolor(0,0,100);
   cout<<iterator<<endl;
   //dst.at<Vec3b>(iterator.x,iterator.y)=mycolor;
   circle(newdst,iterator,20,CV_RGB(255,255,255),-1,8,0);
+  if(iterator.x>maxx)
+  maxx=iterator.x;
+  if(iterator.y>maxy)
+  maxy=iterator.y;
+  if(iterator.x<minx)
+  minx=iterator.x;
+  if(iterator.y<miny)
+  miny=iterator.y;
+  inputQuad.push_back(iterator);
 }
-
+cout<<"Minx: "<<minx<<"Miny: "<<miny<<"Maxx: "<<maxx<<"Maxy: "<<maxy<<endl;
+outputQuad.push_back(Point(minx,miny));
+outputQuad.push_back(Point(minx,maxy));
+outputQuad.push_back(Point(maxx,miny));
+outputQuad.push_back(Point(maxx,maxy));
+Rect myROI(minx,miny,maxx-minx,maxy-miny);
+Mat croppedImage = src(myROI);
 
   for( int i = 0; i< contours.size(); i++ )
      {
-
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
      }
+
 
 
 
@@ -112,6 +129,7 @@ for (auto iterator : draw)
  imshow("corners",newdst);
  //imshow("canny", dst);
  imshow("contours",drawing);
+ imshow("cfaf",croppedImage);
  //imshow("contours",contours);
 
 
