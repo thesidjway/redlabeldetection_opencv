@@ -65,7 +65,8 @@ vector<vector<Point> > newcontoursvector;
 Point prev;
 prev.x = 0;
 prev.y = 0;
-vector<Point > newcontours,draw,anothervar,outputQuad,inputQuad;
+vector<Point > newcontours,draw,anothervar;
+Point2f outputQuad[4],inputQuad[4];
 
 for (auto iter : contours)
    {
@@ -91,7 +92,7 @@ for (auto iter : contours)
   }
 Mat newdst=dst;
 approxPolyDP(anothervar, draw, 2, 1);
-int minx=32767,miny=32767,maxx=0,maxy=0;
+int minx=32767,miny=32767,maxx=0,maxy=0,it=0;
 for (auto iterator : draw)
 {
   Vec3b mycolor(0,0,100);
@@ -106,30 +107,36 @@ for (auto iterator : draw)
   minx=iterator.x;
   if(iterator.y<miny)
   miny=iterator.y;
-  inputQuad.push_back(iterator);
+  inputQuad[it]=iterator;
+  it++;
 }
 cout<<"Minx: "<<minx<<"Miny: "<<miny<<"Maxx: "<<maxx<<"Maxy: "<<maxy<<endl;
-outputQuad.push_back(Point(minx,miny));
-outputQuad.push_back(Point(minx,maxy));
-outputQuad.push_back(Point(maxx,miny));
-outputQuad.push_back(Point(maxx,maxy));
+outputQuad[0]=Point(minx,miny);
+outputQuad[1]=Point(minx,maxy);
+outputQuad[3]=Point(maxx,miny);
+outputQuad[2]=Point(maxx,maxy);
 Rect myROI(minx,miny,maxx-minx,maxy-miny);
-Mat croppedImage = src(myROI);
+
+Mat pers;
 
   for( int i = 0; i< contours.size(); i++ )
      {
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
      }
+Mat lambda( 2, 4, CV_32FC1 );
+lambda = Mat::zeros( src.rows, src.cols, src.type() );
+lambda = getPerspectiveTransform(inputQuad, outputQuad);
+warpPerspective(src,pers,lambda,src.size() );
 
 
-
-
+Mat croppedImage = pers(myROI);
  //imshow("detected lines", cdst);
- imshow("corners",newdst);
+ //imshow("corners",newdst);
  //imshow("canny", dst);
- imshow("contours",drawing);
- imshow("cfaf",croppedImage);
+// imshow("contours",drawing);
+ imshow("Original",src);
+ imshow("Cropped and Rotated",croppedImage);
  //imshow("contours",contours);
 
 
