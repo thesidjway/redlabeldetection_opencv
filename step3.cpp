@@ -9,6 +9,18 @@ using namespace cv;
 using namespace std;
 
 RNG rng(12345);
+
+double getSimilarity( const Mat A, const Mat B ) {
+if ( A.rows > 0 && A.rows == B.rows && A.cols > 0 && A.cols == B.cols ) {
+    // Calculate the L2 relative error between images.
+    double errorL2 = norm( A, B, CV_L2 );
+    // Convert to a reasonable scale, since L2 error is summed across all pixels of the image.
+    double similarity = errorL2 / (double)( A.rows * A.cols );
+    return similarity;
+}
+}
+
+
 int angler(int a,int b)
 {
   if(a>b)
@@ -16,6 +28,7 @@ int angler(int a,int b)
   else 
     return a;
 }
+
 int main(int argc, char** argv)
 {
 /*const char* filename = argc >= 2 ? argv[1] : "pic1.jpg";
@@ -101,14 +114,11 @@ for (auto iter: approxCurve)
     inputQuad[it]=iter;
     it++;
 }
-Mat pers;
-Mat check=imread("square.jpg",CV_LOAD_IMAGE_GRAYSCALE);
-/*outputQuad[3]=Point(minx,miny);
-outputQuad[2]=Point(minx,maxy);
-outputQuad[0]=Point(maxx,miny);
-outputQuad[1]=Point(maxx,maxy);
-Rect myROI(((float)minx*0.9+(float)maxx*0.1),((float)miny*0.9+(float)maxy*0.1),(maxx-minx)*0.8,(maxy-miny)*0.8);
-*/
+Mat pers,check1,check2,check3;
+Mat checker1,checker2,checker3,checkest1,checkest2,checkest3;
+Mat check=imread("image1.png",CV_LOAD_IMAGE_GRAYSCALE);
+Mat checker=imread("image2.png",CV_LOAD_IMAGE_GRAYSCALE);
+Mat checkest=imread("image3.png",CV_LOAD_IMAGE_GRAYSCALE);
 
 outputQuad[3]=Point(0,0);
 outputQuad[2]=Point(0,check.cols);
@@ -121,23 +131,84 @@ lambda = Mat::zeros( srcclr.rows, srcclr.cols, srcclr.type() );
 lambda = getPerspectiveTransform(inputQuad, outputQuad);
 warpPerspective(srcclr,pers,lambda,srcclr.size() );
 
+transpose(check,check1);
+flip(check1,check1,1);
+transpose(check1,check2);
+flip(check2,check2,1);
+transpose(check2,check3);
+flip(check3,check3,1);
+
+transpose(checker,checker1);
+flip(checker1,checker1,1);
+transpose(checker1,checker2);
+flip(checker2,checker2,1);
+transpose(checker2,checker3);
+flip(checker3,checker3,1);
+
+transpose(checkest,checkest1);
+flip(checkest1,checkest1,1);
+transpose(checkest1,checkest2);
+flip(checkest2,checkest2,1);
+transpose(checkest2,checkest3);
+flip(checkest3,checkest3,1);
+
 if(pers.rows>=check.rows && pers.cols>=check.cols)
 {
 Mat result;
 Mat croppedImage = pers(myROI);
 flip(croppedImage,croppedImage,1);
 cvtColor(croppedImage, croppedImage, CV_BGR2GRAY);
-result.create( 1,1, CV_32FC1 );
-matchTemplate( croppedImage, check, result, CV_TM_CCORR);
+
+double corr=getSimilarity(croppedImage,check);
+double corr1=getSimilarity(croppedImage,check1);
+double corr2=getSimilarity(croppedImage,check2);
+double corr3=getSimilarity(croppedImage,check3);
+
+double correr=getSimilarity(croppedImage,checker);
+double correr1=getSimilarity(croppedImage,checker1);
+double correr2=getSimilarity(croppedImage,checker2);
+double correr3=getSimilarity(croppedImage,checker3);
+
+double correst=getSimilarity(croppedImage,checkest);
+double correst1=getSimilarity(croppedImage,checkest1);
+double correst2=getSimilarity(croppedImage,checkest2);
+double correst3=getSimilarity(croppedImage,checkest3);
+
+if(croppedImage.rows>0 && croppedImage.cols>0 && corr<=0.3||corr1<=0.3||corr2<=0.3||corr3<=0.3)
+{
+  int baseline=0;
+  Size textSize = getTextSize("Image 1", FONT_HERSHEY_SCRIPT_SIMPLEX,
+                            2, 3, &baseline);
+  Point textOrg((srcclr.cols - textSize.width)/2,(srcclr.rows + textSize.height)/2);
+  putText(srcclr, "Image 1", textOrg, FONT_HERSHEY_SCRIPT_SIMPLEX, 2,
+      
+        Scalar::all(255), 3, 8);
+}
+else if(croppedImage.rows>0 && croppedImage.cols>0 && correr<=0.3||correr1<=0.3||correr2<=0.3||correr3<=0.3)
+{
+  int baseline=0;
+  Size textSize = getTextSize("Image 2", FONT_HERSHEY_SCRIPT_SIMPLEX,
+                            2, 3, &baseline);
+  Point textOrg((srcclr.cols - textSize.width)/2,(srcclr.rows + textSize.height)/2);
+  putText(srcclr, "Image 2", textOrg, FONT_HERSHEY_SCRIPT_SIMPLEX, 2,
+      
+        Scalar::all(255), 3, 8);
+}
+else if(croppedImage.rows>0 && croppedImage.cols>0 && correst<=0.3||correst1<=0.3||correst2<=0.3||correst3<=0.3)
+{
+  int baseline=0;
+  Size textSize = getTextSize("Image 3", FONT_HERSHEY_SCRIPT_SIMPLEX,
+                            2, 3, &baseline);
+  Point textOrg((srcclr.cols - textSize.width)/2,(srcclr.rows + textSize.height)/2);
+  putText(srcclr, "Image 3", textOrg, FONT_HERSHEY_SCRIPT_SIMPLEX, 2,
+      
+        Scalar::all(255), 3, 8);
+}
 //cout<<"result: "<<result<<endl;
 imshow("cropped",croppedImage);
 }
 }
-else()
-{
-  
-}
-
+imshow("orig",srcclr);
  char a=waitKey(100);
  if (a == 27)
       break;
