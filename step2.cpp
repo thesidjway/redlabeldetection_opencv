@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 {
 const char* filename = argc >= 2 ? argv[1] : "pic1.jpg";
 Mat src = imread(filename, 0);
-Mat newcom=imread("testimage3.png",0);
+Mat newcom=imread("3new.png",0);
 Mat srcclr = imread(filename, CV_LOAD_IMAGE_COLOR);
 
  if(src.empty())
@@ -71,7 +71,7 @@ Point prev;
 prev.x = 0;
 prev.y = 0;
 vector<Point > newcontours,draw,anothervar,largestContour;
-Point2f outputQuad[4],inputQuad[4];
+Point2f outputQuad[4],inputQuad[4],outputQuad1[4],inputQuad1[4];
 int maxlength=0;
 for (auto iter : contours)
    {
@@ -101,7 +101,7 @@ for (auto iter : contours)
    // cout<<"COUNTOUR COMPLETE"<<endl;
 
 Mat newdst=dst;
-approxPolyDP(newcontours, draw, arcLength(newcontours,1)*0.1, 1);
+approxPolyDP(newcontours, draw, arcLength(newcontours,1)*0.02, 1);
 int minx=32767,miny=32767,maxx=0,maxy=0,it=0;
 for (auto iterator : draw)
 {
@@ -121,11 +121,11 @@ for (auto iterator : draw)
   it++;
 }
 cout<<"Minx: "<<minx<<"Miny: "<<miny<<"Maxx: "<<maxx<<"Maxy: "<<maxy<<endl;
-outputQuad[0]=Point(minx,miny);
-outputQuad[1]=Point(minx,maxy);
-outputQuad[3]=Point(maxx,miny);
-outputQuad[2]=Point(maxx,maxy);
-Rect myROI(minx,miny,maxx-minx,maxy-miny);
+outputQuad[0]=Point(0,0);
+outputQuad[1]=Point(0,newcom.cols);
+outputQuad[3]=Point(newcom.rows,0);
+outputQuad[2]=Point(newcom.rows,newcom.cols);
+Rect myROI(0,0,newcom.rows,newcom.cols);
 
 Mat pers;
 
@@ -138,26 +138,51 @@ for (auto contourpt : largestContour){
     Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
     circle(drawing, contourpt, 2, color, 1, 8, 0);
 }
-
 Mat lambda( 2, 4, CV_32FC1 ),lambda1( 2, 4, CV_32FC1 ),lambda2( 2, 4, CV_32FC1 ),lambda3( 2, 4, CV_32FC1 );
 lambda = Mat::zeros( src.rows, src.cols, src.type() );
 lambda = getPerspectiveTransform(inputQuad, outputQuad);
 warpPerspective(src,pers,lambda,src.size() );
 
-lambda1 = Mat::zeros( pers.rows, pers.cols, pers.type() );
-lambda1 = getPerspectiveTransform(inputQuad, outputQuad);
-warpPerspective(src,pers,lambda,src.size() );
-
 Mat croppedImage = pers(myROI);
-cout<<"croppedImage.depth: "<<croppedImage.depth()<<" newcom.depth: "<<croppedImage.depth()<<endl;
-//matchShapes(croppedImage, newcom, CV_CONTOURS_MATCH_I1, 0);*/
+
+transpose(croppedImage, rot1);  
+flip(rot1, rot1,1);
+
+transpose(rot1, rot2);  
+flip(rot2, rot2,1);
+
+transpose(rot2, rot3);  
+flip(rot3, rot3,1);
+Mat result;
+result.create( croppedImage.cols - newcom.cols+1, croppedImage.rows - newcom.rows+1, CV_32FC1 );
+matchTemplate(croppedImage, newcom, result,CV_TM_SQDIFF_NORMED);
+//cout<<"RESULT"<<result<<endl;
+result.create( rot1.cols - newcom.cols+1, rot1.rows - newcom.rows+1, CV_32FC1 );
+matchTemplate(rot1, newcom, result,CV_TM_SQDIFF_NORMED);
+result.create( rot2.cols - newcom.cols+1, rot2.rows - newcom.rows+1, CV_32FC1 );
+//cout<<"RESULT 1"<<result<<endl;
+matchTemplate(rot2, newcom, result,CV_TM_SQDIFF_NORMED);
+result.create( rot3.cols - newcom.cols+1, rot3.rows - newcom.rows+1, CV_32FC1 );
+//cout<<"RESULT 2"<<result<<endl;
+matchTemplate(rot3, newcom, result,CV_TM_SQDIFF_NORMED);
+//cout<<"RESULT 3"<<result<<endl;
+/*
+matchTemplate(InputArray image, InputArray templ, OutputArray result, int method)
+matchTemplate(InputArray image, InputArray templ, OutputArray result, int method)
+matchTemplate(InputArray image, InputArray templ, OutputArray result, int method)
+cout<<"croppedImage.depth: "<<croppedImage.depth()<<" newcom.depth: "<<croppedImage.depth()<<endl;*/
+//matchShapes(croppedImage, newcom, CV_CONTOURS_MATCH_I1, 0);
  //imshow("detected lines", cdst);
  //imshow("corners",newdst);
  //imshow("canny", dst);
-imshow("contours",drawing);
- //imshow("Original",src);
+//imshow("contours",drawing);
+// imshow("Original",src);
+
 imshow("Cropped and Rotated",croppedImage);
- //imshow("contours",contours);
+imshow("Cropped and Rotated 1",rot1);
+imshow("Cropped and Rotated 2",rot2);
+imshow("Cropped and Rotated 3",rot3);
+//imshow("contours",contours);
 
 
  waitKey();

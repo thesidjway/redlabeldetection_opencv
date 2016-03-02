@@ -1,0 +1,26 @@
+vector<vector<Point> > con1,con2;
+vector<Vec4i> hier1,hier2;
+Mat can1,can2;
+Canny(croppedImage, can1, 50, 100, 3 );
+Canny(check,can2,50,100,3);
+findContours( can1, con1, hier1, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+findContours( can2, con2, hier2, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+double co1=matchShapes(con1[0],con2[0],CV_CONTOURS_MATCH_I1,0);
+Mat drawing1 = Mat::zeros( can1.size(), CV_8UC3 );
+Mat drawing2 = Mat::zeros( can2.size(), CV_8UC3 );
+for( int i = 0; i< con1.size(); i++ )
+  {
+   Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+   drawContours( drawing1, con1, i, color, 2, 8, hierarchy, 0, Point() );
+  }
+  for( int i = 0; i< con2.size(); i++ )
+  {
+   Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+   drawContours( drawing2, con2, i, color, 2, 8, hierarchy, 0, Point() );
+  }
+
+
+cout<<"co1: "<<co1<<endl;
+
+imshow("2",drawing1);
+imshow("1",drawing2);

@@ -1,0 +1,55 @@
+
+for( size_t i = 0; i < lines.size(); i++ )
+ {  
+  
+    Vec4i l = lines[i];
+    pointstor.push_back(Point(l[0],l[1]));
+  pointstor.push_back(Point(l[2],l[3]));
+    if(sqrt(pow(l[2]-l[0],2)+pow(l[3]-l[1],2))>longest)
+    {
+      longest=sqrt(pow(l[2]-l[0],2)+pow(l[3]-l[1],2));
+      anglelongest=atan2(l[3]-l[1],l[2]-l[0])*180/CV_PI;
+      op1=anglelongest+90;
+      op2=anglelongest-90;
+      lineone=lines[i];
+    }
+}
+
+
+for( size_t i = 0; i < lines.size(); i++ )
+ {  
+  Vec4i l = lines[i];
+  if (sqrt(pow(l[2]-l[0],2)+pow(l[3]-l[1],2))>longest/3)
+  {
+   
+    angle=atan2(l[3]-l[1],l[2]-l[0])*180/CV_PI;
+    if (abs(angle-op1)<10)
+    {
+      answ1=angle;
+       cout<<answ1<<" answ1"<< anglelongest<<" anglelongest"<<endl;
+       linetwo=lines[i];
+      break;
+    }
+    else if(abs(angle-op2)<10)
+    {
+      answ1=angle;
+       cout<<answ1<<" answ1 "<< anglelongest<<" anglelongest"<<endl;
+       linetwo=lines[i];
+      break;
+    }
+  }
+ }
+
+
+line( srcclr, Point(linetwo[0], linetwo[1]), Point(linetwo[2], linetwo[3]), Scalar(0,255,0), 3, CV_AA);
+line( srcclr, Point(lineone[0], lineone[1]), Point(lineone[2], lineone[3]), Scalar(0,255,255), 3, CV_AA);
+
+if(pointstor.size()>0)
+{
+Rect b=boundingRect(pointstor);
+Mat awe=srcclr(b);
+Point2f src_center(awe.cols/2.0F, awe.rows/2.0F);
+Mat rot_mat = getRotationMatrix2D(src_center, angler(anglelongest,answ1), 1.0);
+Mat dest;
+warpAffine(awe, dest, rot_mat, awe.size());
+}
