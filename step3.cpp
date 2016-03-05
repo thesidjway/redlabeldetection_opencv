@@ -1,10 +1,13 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-# include "opencv2/features2d/features2d.hpp"
-# include "opencv2/nonfree/features2d.hpp"
+#include "opencv2/core/core.hpp"
+#include "opencv2/ml/ml.hpp"
+#include <fstream>
 
 #include <iostream>
 #define dilation_size 2
+#define dilation_size_w 1
+#define NORM_THRES 0.32
 using namespace cv;
 using namespace std;
 
@@ -12,9 +15,13 @@ RNG rng(12345);
 
 double getSimilarity( const Mat A, const Mat B ) {
 if ( A.rows > 0 && A.rows == B.rows && A.cols > 0 && A.cols == B.cols ) {
-    // Calculate the L2 relative error between images.
-    double errorL2 = norm( A, B, CV_L2 );
-    // Convert to a reasonable scale, since L2 error is summed across all pixels of the image.
+    Mat C,D;
+
+    /*threshold(A, C, 128, 255,THRESH_BINARY);
+    threshold(B, D, 128, 255, THRESH_BINARY);
+        imshow("C",C);
+        imshow("D",D);*/
+    double errorL2 = norm(A,B, CV_L2 );
     double similarity = errorL2 / (double)( A.rows * A.cols );
     return similarity;
 }
@@ -47,21 +54,22 @@ while(1)
  v >> srcclr;
  Mat dst, cdst,srchsv,srcred,srcred1,srcred2,srcwhite,cannyred,cannywhite,cannyfin,cannywhite1,cannyred1;
  cvtColor(srcclr, srchsv, CV_BGR2HSV);
- inRange(srchsv,Scalar(0,60,20),Scalar(15,255,255),srcred1);
- inRange(srchsv,Scalar(165,60,20),Scalar(180,255,255),srcred2);
+ inRange(srchsv,Scalar(0,40,30),Scalar(15,255,255),srcred1);
+ inRange(srchsv,Scalar(165,40,30),Scalar(180,255,255),srcred2);
  bitwise_or(srcred1,srcred2,srcred);
 
- inRange(srchsv,Scalar(0,0,140),Scalar(180,80,255),srcwhite);
+ inRange(srchsv,Scalar(0,0,150),Scalar(180,60,255),srcwhite);
 
  
-  //Canny(srcred, cannyred,50 , 200, 3);
-  //Canny(srcwhite, cannywhite, 50, 200, 3);
+//Canny(srcred, cannyred,50 , 200, 3);
+//Canny(srcwhite, cannywhite, 50, 200, 3);
 
 Mat element = getStructuringElement( MORPH_CROSS,Size( 2*dilation_size + 1, 2*dilation_size+1 ), Point( dilation_size, dilation_size ) );
-dilate( srcwhite, cannywhite1, element );
+Mat element1 = getStructuringElement( MORPH_CROSS,Size( 2*dilation_size_w + 1, 2*dilation_size_w+1 ), Point( dilation_size_w, dilation_size_w ) );
+dilate( srcwhite, cannywhite1, element1 );
 dilate( srcred, cannyred1, element );
-//1imshow("cred",cannyred1);
-//imshow("cwhite",cannywhite1);
+imshow("cred",cannyred1);
+imshow("cwhite",cannywhite1);
 bitwise_and(cannyred1,cannywhite1,cannyfin);
 //imshow("srcwhite",srcwhite);
 //imshow("srcred",srcred);
@@ -164,17 +172,20 @@ double corr1=getSimilarity(croppedImage,check1);
 double corr2=getSimilarity(croppedImage,check2);
 double corr3=getSimilarity(croppedImage,check3);
 
+cout<<"Corr: "<<corr<<" "<<corr1<<" "<<corr2<<" "<<corr3<<endl;
 double correr=getSimilarity(croppedImage,checker);
 double correr1=getSimilarity(croppedImage,checker1);
 double correr2=getSimilarity(croppedImage,checker2);
 double correr3=getSimilarity(croppedImage,checker3);
 
+cout<<"Correr: "<<correr<<" "<<correr1<<" "<<correr2<<" "<<correr3<<endl;
 double correst=getSimilarity(croppedImage,checkest);
 double correst1=getSimilarity(croppedImage,checkest1);
 double correst2=getSimilarity(croppedImage,checkest2);
 double correst3=getSimilarity(croppedImage,checkest3);
 
-if(croppedImage.rows>0 && croppedImage.cols>0 && corr<=0.3||corr1<=0.3||corr2<=0.3||corr3<=0.3)
+cout<<"Correst: "<<correst<<" "<<correst1<<" "<<correst2<<" "<<correst3<<endl;
+if(croppedImage.rows>0 && croppedImage.cols>0 && corr<=NORM_THRES||corr1<=NORM_THRES||corr2<=NORM_THRES||corr3<=NORM_THRES)
 {
   int baseline=0;
   Size textSize = getTextSize("Image 1", FONT_HERSHEY_SCRIPT_SIMPLEX,
@@ -184,7 +195,7 @@ if(croppedImage.rows>0 && croppedImage.cols>0 && corr<=0.3||corr1<=0.3||corr2<=0
       
         Scalar::all(255), 3, 8);
 }
-else if(croppedImage.rows>0 && croppedImage.cols>0 && correr<=0.3||correr1<=0.3||correr2<=0.3||correr3<=0.3)
+else if(croppedImage.rows>0 && croppedImage.cols>0 && correr<=NORM_THRES||correr1<=NORM_THRES||correr2<=NORM_THRES||correr3<=NORM_THRES)
 {
   int baseline=0;
   Size textSize = getTextSize("Image 2", FONT_HERSHEY_SCRIPT_SIMPLEX,
@@ -194,7 +205,7 @@ else if(croppedImage.rows>0 && croppedImage.cols>0 && correr<=0.3||correr1<=0.3|
       
         Scalar::all(255), 3, 8);
 }
-else if(croppedImage.rows>0 && croppedImage.cols>0 && correst<=0.3||correst1<=0.3||correst2<=0.3||correst3<=0.3)
+else if(croppedImage.rows>0 && croppedImage.cols>0 && correst<=NORM_THRES||correst1<=NORM_THRES||correst2<=NORM_THRES||correst3<=NORM_THRES)
 {
   int baseline=0;
   Size textSize = getTextSize("Image 3", FONT_HERSHEY_SCRIPT_SIMPLEX,
@@ -206,6 +217,11 @@ else if(croppedImage.rows>0 && croppedImage.cols>0 && correst<=0.3||correst1<=0.
 }
 //cout<<"result: "<<result<<endl;
 imshow("cropped",croppedImage);
+}
+else
+{
+
+
 }
 }
 imshow("orig",srcclr);

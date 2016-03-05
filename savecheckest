@@ -1,0 +1,118 @@
+ float first=distance(vtx[a],vtx[b]);
+  float other=distance(vtx[b],vtx[(b+1)%4]);
+  Point2f outputQuadr[4];
+  Mat pers1;
+  outputQuadr[a]=Point(0,0);
+  outputQuadr[b]=Point(first,0);
+  outputQuadr[(b+1)%4]=Point(first,other);
+  outputQuadr[(b+2)%4]=Point(0,other);
+Rect myROI(0,0,first,other);
+Rect myROI1(0,0,other,first);
+
+Mat lambda1( 2, 4, CV_32FC1 );
+lambda1 = Mat::zeros( srcclr.rows, srcclr.cols, srcclr.type() );
+lambda1 = getPerspectiveTransform(vtx, outputQuadr);
+warpPerspective(srcclr,pers1,lambda1,srcclr.size() );
+Mat newpers=pers1(myROI);
+imshow("pers1",newpers);
+
+Size size(first>other?first:other,first>other?first:other);
+Mat dst,dster,dstest,check1,check2,check3,checker1,checker2,checker3,checkest1,checkest2,checkest3;
+
+resize(check,dst,size);
+resize(checker,dster,size);
+resize(checkest,dstest,size);
+
+cvtColor(newpers,newpers,CV_BGR2GRAY);
+if(dst.cols>0 && dst.rows>0)
+{
+transpose(dst,check1);
+flip(check1,check1,1);
+transpose(check1,check2);
+flip(check2,check2,1);
+transpose(check2,check3);
+flip(check3,check3,1);
+}
+if(dster.cols>0 && dster.rows>0)
+{
+transpose(dster,checker1);
+flip(checker1,checker1,1);
+transpose(checker1,checker2);
+flip(checker2,checker2,1);
+transpose(checker2,checker3);
+flip(checker3,checker3,1);
+}
+if(dstest.cols>0 && dstest.rows>0)
+{
+transpose(dstest,checkest1);
+flip(checkest1,checkest1,1);
+transpose(checkest1,checkest2);
+flip(checkest2,checkest2,1);
+transpose(checkest2,checkest3);
+flip(checkest3,checkest3,1);
+}
+
+Mat ycheck1,ycheck,ycheck2,ycheck3,ychecker1,ychecker,ychecker2,ychecker3,ycheckest,ycheckest1,ycheckest2,ycheckest3;
+if(possiblecrop(check,myROI))
+{
+ ycheck=check(myROI);
+ ycheck1=check1(myROI);
+ ycheck2=check2(myROI);
+ ycheck3=check3(myROI);
+}
+if(possiblecrop(checker,myROI))
+{
+ ychecker=checker(myROI);
+ ychecker1=checker1(myROI);
+ ychecker2=checker2(myROI);
+ ychecker3=checker3(myROI);
+}
+if(possiblecrop(checkest,myROI))
+{
+   
+ ycheckest=checkest(myROI);
+ ycheckest1=checkest1(myROI);
+ ycheckest2=checkest2(myROI);
+ ycheckest3=checkest3(myROI);
+}
+if(possiblecrop(check,myROI1))
+{
+
+ ycheck=check(myROI1);
+ ycheck1=check1(myROI1);
+ ycheck2=check2(myROI1);
+ ycheck3=check3(myROI1);
+
+}
+if(possiblecrop(checker,myROI1))
+{
+ ychecker=checker(myROI1);
+ ychecker1=checker1(myROI1);
+ ychecker2=checker2(myROI1);
+ ychecker3=checker3(myROI1);
+}
+
+if(possiblecrop(checkest,myROI1))
+{
+ ycheckest=checkest(myROI1);
+ ycheckest1=checkest1(myROI1);
+ ycheckest2=checkest2(myROI1);
+ ycheckest3=checkest3(myROI1);
+}
+
+double corr,corr1,corr2,corr3,correr,correr1,correr2,correr3,correst,correst1,correst2,correst3;
+ corr=getSimilarity(newpers,ycheck);
+ corr1=getSimilarity(newpers,ycheck1);
+ corr2=getSimilarity(newpers,ycheck2);
+ corr3=getSimilarity(newpers,ycheck3);
+
+ correr=getSimilarity(newpers,ychecker);
+ correr1=getSimilarity(newpers,ychecker1);
+ correr2=getSimilarity(newpers,ychecker2);
+ correr3=getSimilarity(newpers,ychecker3);
+
+ correst=getSimilarity(newpers,ycheckest);
+ correst1=getSimilarity(newpers,ycheckest1);
+ correst2=getSimilarity(newpers,ycheckest2);
+ correst3=getSimilarity(newpers,ycheckest3);
+cout<<corr<<corr1<<corr2<<corr3<<endl;
